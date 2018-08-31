@@ -49,6 +49,65 @@ TO <- unite(TO, "stop.time", stop.time, stop.time.ampm, sep = " ")
 TO$stop.time<- (format(strptime(TO$stop.time, "%I:%M:%S %p"), "%H:%M:%S"))
 FROM$start.time <- (format(strptime(FROM$start.time, "%I:%M:%S %p"), "%H:%M:%S"))
 
+#separated the dates into day, month, year in FROM 
+library(tidyr)
+FROM <- separate(FROM, start.date, c("month", "day", "year"), sep = "/")
+View(FROM)
+
+#separated the dates into day, month, year in TO
+library(tidyr)
+TO <- separate(TO, stop.date, c("month", "day", "year"), sep = "/")
+View(TO)
+
+#converted dates to numeric in FROM
+FROM$month <- as.numeric(unlist(FROM$month))
+class(FROM$month)
+FROM$day <- as.numeric(unlist(FROM$day))
+class(FROM$day)
+FROM$year <- as.numeric(unlist(FROM$year))
+class(FROM$year)
+
+#converted dates to numeric in TO
+TO$month <- as.numeric(unlist(TO$month))
+class(TO$month)
+TO$day <- as.numeric(unlist(TO$day))
+class(TO$day)
+TO$year <- as.numeric(unlist(TO$year))
+class(TO$year)
+
+#Grouped observation numbers by year in TO
+library(dplyr)
+TO %>% 
+  group_by("year") %>% 
+  count(year) 
+
+#Grouped observation numbers by year in FROM
+library(dplyr)
+FROM %>% 
+  group_by("year") %>% 
+  count(year) 
+
+
+#Grouped observation numbers by year, month, day in TO
+library(dplyr)
+TO_Obs <- 
+  TO %>% 
+  count(year, month, day)
+View(TO_Obs)
+
+#Grouped observation numbers by year, month, day in FROM
+library(dplyr)
+FROM_Obs <- 
+  FROM %>% 
+  count(year, month, day)
+View(FROM_Obs)
+
+#Exported TO_Obs & FROM_obs in excel for easy viewing
+write.csv(FROM_Obs, "FROM_Observations.csv")
+write.csv(TO_Obs, "TO_Observations.csv")
+
+_______________________________________________________
+
 #converted characters to dates
 TO$stop.date <- as.Date(TO$stop.date, format = "%m/%d/%Y", tryFormats = c("%Y-%m-%d", "%Y/%m/%d"))
 class(TO$stop.date)
