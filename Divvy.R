@@ -1,4 +1,3 @@
-
 data = read.csv("C:/Users/chris/Desktop/Divvy/Divvy_Trips.csv", header = TRUE, sep = ",")
 
 #Reviewed Basic Data Structure
@@ -28,18 +27,17 @@ summary(TO)
 head(TO)
 tail(TO)
 
-#separated the date and time in start and stop time columns in FROM in order to make the analysis easier 
+#separated the date and time in start and stop time columns order to make the analysis easier 
 library(tidyr)
 FROM_sepstart <- separate(FROM, START.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
 FROM <- separate(FROM_sepstart, STOP.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
 View(FROM)
 
-#separated the date and time in start and stop time columns in TO in order to make the analysis easier 
 library(tidyr)
 TO_sepstart <- separate(TO, START.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
 TO <- separate(TO_sepstart, STOP.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
 View(TO)
- 
+
 #combined the AM/PM in the time
 library(tidyr)
 FROM <- unite(FROM, "start.time", start.time, start.time.ampm, sep = " ")
@@ -49,17 +47,16 @@ TO <- unite(TO, "stop.time", stop.time, stop.time.ampm, sep = " ")
 TO$stop.time<- (format(strptime(TO$stop.time, "%I:%M:%S %p"), "%H:%M:%S"))
 FROM$start.time <- (format(strptime(FROM$start.time, "%I:%M:%S %p"), "%H:%M:%S"))
 
-#separated the dates into day, month, year in FROM 
+#separated the dates into day, month, year 
 library(tidyr)
 FROM <- separate(FROM, start.date, c("month", "day", "year"), sep = "/")
 View(FROM)
 
-#separated the dates into day, month, year in TO
 library(tidyr)
 TO <- separate(TO, stop.date, c("month", "day", "year"), sep = "/")
 View(TO)
 
-#converted dates to numeric in FROM
+#converted dates to numeric 
 FROM$month <- as.numeric(unlist(FROM$month))
 class(FROM$month)
 FROM$day <- as.numeric(unlist(FROM$day))
@@ -67,7 +64,6 @@ class(FROM$day)
 FROM$year <- as.numeric(unlist(FROM$year))
 class(FROM$year)
 
-#converted dates to numeric in TO
 TO$month <- as.numeric(unlist(TO$month))
 class(TO$month)
 TO$day <- as.numeric(unlist(TO$day))
@@ -75,18 +71,33 @@ class(TO$day)
 TO$year <- as.numeric(unlist(TO$year))
 class(TO$year)
 
-#Grouped observation numbers by year in TO
+#searched for any NA values in TO & FROM
 library(dplyr)
-TO %>% 
+str(is.na(TO$year))
+str(is.na(TO$month))
+str(is.na(TO$day))
+
+str(is.na(FROM$year))
+str(is.na(FROM$month))
+str(is.na(FROM$day))
+
+#Grouped observation numbers by year 
+library(dplyr)
+TO_YEARS = TO %>% 
   group_by("year") %>% 
   count(year) 
 
-#Grouped observation numbers by year in FROM
 library(dplyr)
-FROM %>% 
+FROM_YEARS = FROM %>% 
   group_by("year") %>% 
   count(year) 
 
+#visualized the years in ggplot
+library(ggplot)
+ggplot(FROM_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth()
+
+library(ggplot)
+ggplot(TO_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth()
 
 #Grouped observation numbers by year, month, day in TO
 library(dplyr)
@@ -106,6 +117,9 @@ View(FROM_Obs)
 write.csv(FROM_Obs, "FROM_Observations.csv")
 write.csv(TO_Obs, "TO_Observations.csv")
 
+
+
+
 _______________________________________________________
 
 #converted characters to dates
@@ -115,6 +129,10 @@ FROM$start.date <- as.Date(FROM$start.date, format = "%m/%d/%Y", tryFormats = c(
 class(FROM$start.date)
 
 #grouped
+
+
+
+
 
   
   
