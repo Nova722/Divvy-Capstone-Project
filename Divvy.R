@@ -56,7 +56,7 @@ library(tidyr)
 TO <- separate(TO, stop.date, c("month", "day", "year"), sep = "/")
 View(TO)
 
-#converted dates to numeric 
+#converted dates to numeric for easier analysis
 FROM$month <- as.numeric(unlist(FROM$month))
 class(FROM$month)
 FROM$day <- as.numeric(unlist(FROM$day))
@@ -73,13 +73,13 @@ class(TO$year)
 
 #searched for any NA values in TO & FROM
 library(dplyr)
-str(is.na(TO$year))
-str(is.na(TO$month))
-str(is.na(TO$day))
+summary(is.na(TO$year))
+summary(is.na(TO$month))
+summary(is.na(TO$day))
 
-str(is.na(FROM$year))
-str(is.na(FROM$month))
-str(is.na(FROM$day))
+summary(is.na(FROM$year))
+summary(is.na(FROM$month))
+summary(is.na(FROM$day))
 
 #Grouped observation numbers by year 
 library(dplyr)
@@ -93,7 +93,7 @@ FROM_YEARS = FROM %>%
   count(year) 
 
 #visualized the years in ggplot
-library(ggplot)
+library(ggplot2)
 ggplot(FROM_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth()
 
 library(ggplot)
@@ -118,7 +118,20 @@ write.csv(FROM_Obs, "FROM_Observations.csv")
 write.csv(TO_Obs, "TO_Observations.csv")
 
 
+#united the dates as year, month, day for easy visualization
+library(tidyr)
+FROM_Obs <- unite(FROM_Obs, "Date", year, month, day, sep = "")
+View(FROM_Obs)
 
+library(ggplot2)
+ggplot(FROM_Obs, aes( x= Date, y = n )) + geom_point() +geom_smooth()
+
+library(tidyr)
+TO_Obs <- unite(TO_Obs, "Date", year, month, day, sep = "")
+View(TO_Obs)
+
+library(ggplot2)
+ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point() +geom_smooth()
 
 _______________________________________________________
 
@@ -134,10 +147,6 @@ class(FROM$start.date)
 
 
 
-  
-  
-  
 
- 
 
-  
+
