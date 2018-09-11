@@ -94,7 +94,7 @@ FROM_YEARS = FROM %>%
 
 #visualized the years in ggplot
 library(ggplot2)
-ggplot(FROM_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth()
+ggplot(FROM_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth() 
 
 library(ggplot)
 ggplot(TO_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth()
@@ -106,12 +106,18 @@ TO_Obs <-
   count(year, month, day)
 View(TO_Obs)
 
-#Grouped observation numbers by year, month, day in FROM
+library(ggplot2)
+ggplot(TO_Obs, aes( x= month, y = n )) + geom_point() +geom_smooth() + facet_grid(.~ year)
+
+#Grouped & Visulaized observation numbers by year, month, day in FROM
 library(dplyr)
 FROM_Obs <- 
   FROM %>% 
   count(year, month, day)
 View(FROM_Obs)
+
+library(ggplot2)
+ggplot(FROM_Obs, aes( x= month, y = n )) + geom_point()+geom_smooth() + facet_grid(.~ year)
 
 #Exported TO_Obs & FROM_obs in excel for easy viewing
 write.csv(FROM_Obs, "FROM_Observations.csv")
