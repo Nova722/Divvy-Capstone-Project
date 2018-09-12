@@ -1,3 +1,4 @@
+
 data = read.csv("C:/Users/chris/Desktop/Divvy/Divvy_Trips.csv", header = TRUE, sep = ",")
 
 #Reviewed Basic Data Structure
@@ -94,10 +95,10 @@ FROM_YEARS = FROM %>%
 
 #visualized the years in ggplot
 library(ggplot2)
-ggplot(FROM_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth() 
+ggplot(FROM_YEARS, aes( x= year, y = n )) + geom_point() 
 
 library(ggplot)
-ggplot(TO_YEARS, aes( x= year, y = n )) + geom_point() +geom_smooth()
+ggplot(TO_YEARS, aes( x= year, y = n )) + geom_point() 
 
 #Grouped observation numbers by year, month, day in TO
 library(dplyr)
@@ -130,14 +131,16 @@ FROM_Obs <- unite(FROM_Obs, "Date", year, month, day, sep = "")
 View(FROM_Obs)
 
 library(ggplot2)
-ggplot(FROM_Obs, aes( x= Date, y = n )) + geom_point() +geom_smooth()
+ggplot(FROM_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations")
+
+#visualized observations on a day level
 
 library(tidyr)
 TO_Obs <- unite(TO_Obs, "Date", year, month, day, sep = "")
 View(TO_Obs)
 
 library(ggplot2)
-ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point() +geom_smooth()
+ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations")
 
 _______________________________________________________
 
