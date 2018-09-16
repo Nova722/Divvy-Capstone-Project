@@ -140,7 +140,45 @@ TO_Obs <- unite(TO_Obs, "Date", year, month, day, sep = "")
 View(TO_Obs)
 
 library(ggplot2)
+<<<<<<< HEAD
+ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations") +
+  ggtitle("TO") + theme(plot.title = element_text(hjust = 0.5))
+
+#combined the date/time and used lubridate to properly classify them
+library(tidyr)
+TO <- unite(TO, "date.time", stop.date, stop.time, sep = " ")
+FROM <- unite (FROM, "date.time", start.date, start.time, sep = " ")
+
+library(lubridate)
+FROM$date.time <- mdy_hms(FROM$date.time)
+str(FROM$date.time)
+
+library(lubridate)
+TO$date.time <- mdy_hms(TO$date.time)
+str(TO$date.time)
+
+#experimented with plotly visualizations
+library(plotly)
+p <- plot_ly(
+  x = TO_YEARS$year,
+  y = TO_YEARS$n,
+  name = "TO",
+  type = "bar")
+
+api_create(p, filename = "TO Years")
+
+library(plotly)
+p2 <- plot_ly(
+  x = FROM_YEARS$year,
+  y = FROM_YEARS$n,
+  name = "FROM",
+  type = "bar")
+
+api_create(p2, filename = "FROM Years")
+
+=======
 ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations")
+>>>>>>> parent of 380bb90... Updated visualizations & date/time using lubridate
 
 _______________________________________________________
 
@@ -155,7 +193,8 @@ class(FROM$start.date)
 
 
 
-
+Sys.setenv("plotly_username"="tcarr1989")
+Sys.setenv("plotly_api_key"="2I9jpljKFZun4xTzGYj3")
 
 
 
