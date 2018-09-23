@@ -6,6 +6,39 @@ head(data)
 summary(data)
 str(data)
 
+#Tidy up the data for general visualizations on gender & age
+
+GENDER <- data.frame(data$GENDER, data$BIRTH.YEAR, data$START.TIME, data$STOP.TIME)
+str(GENDER)
+
+library(tidyr)
+GENDER <- separate(GENDER, data.START.TIME, c("start.date", "start.time", "start.ampm"), sep = " ")
+GENDER <- separate(GENDER, data.STOP.TIME, c("stop.date", "stop.time", "stop.ampm"), sep = " ")
+
+library(tidyr)
+GENDER <- unite(GENDER, "start.time", start.time, start.ampm, sep = " ")
+GENDER <- unite(GENDER, "stop.time", stop.time, stop.ampm, sep = " ")
+
+#converted AM/PM to military time in order to format properly for lubridate
+GENDER$start.time<- (format(strptime(GENDER$start.time, "%I:%M:%S %p"), "%H:%M:%S"))
+GENDER$stop.time<- (format(strptime(GENDER$stop.time, "%I:%M:%S %p"), "%H:%M:%S"))
+
+library(tidyr)
+GENDER <- unite(GENDER, "Start.Date", start.date, start.time, sep = " ")
+GENDER <- unite(GENDER, "Stop.Date", stop.date, stop.time, sep = " ")
+
+library(lubridate)
+GENDER$Stop.Date <- mdy_hms(GENDER$Stop.Date)
+GENDER$Start.Date <- mdy_hms(GENDER$Start.Date)
+View(GENDER)
+
+library(lubridate)
+tz(GENDER&Stop.Date) <- "America/Chicago"
+
+
+library(ggplot2)
+wide_bar <- ggplot(GENDER, aes(x=1, fill = GENDER)) + geom_bar()
+
 #Reviewed different stations forecasting options regarding trips from, originally wanted to choose Federal St & Polk St, decided against it, Lake Shore Dr. & Monroe has the highest number of observations
 FROM.STATION.NAMES <- data$FROM.STATION.NAME
 summary(FROM.STATION.NAMES)
@@ -108,7 +141,7 @@ TO_Obs <-
 View(TO_Obs)
 
 library(ggplot2)
-ggplot(TO_Obs, aes( x= month, y = n )) + geom_point() +geom_smooth() + facet_grid(.~ year)
+ggplot(TO_Obs, aes( x= factor(month), y = n )) + geom_point() +geom_smooth() + facet_grid(.~ year)
 
 #Grouped & Visulaized observation numbers by year, month, day in FROM
 library(dplyr)
@@ -118,7 +151,7 @@ FROM_Obs <-
 View(FROM_Obs)
 
 library(ggplot2)
-ggplot(FROM_Obs, aes( x= month, y = n )) + geom_point()+geom_smooth() + facet_grid(.~ year)
+ggplot(FROM_Obs, aes( x= factor(month), y = n )) + geom_point()+geom_smooth() + facet_grid(.~ year)
 
 #Exported TO_Obs & FROM_obs in excel for easy viewing
 write.csv(FROM_Obs, "FROM_Observations.csv")
@@ -140,22 +173,24 @@ TO_Obs <- unite(TO_Obs, "Date", year, month, day, sep = "")
 View(TO_Obs)
 
 library(ggplot2)
-<<<<<<< HEAD
 ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations") +
   ggtitle("TO") + theme(plot.title = element_text(hjust = 0.5))
 
 #combined the date/time and used lubridate to properly classify them
 library(tidyr)
+TO <- unite(TO, "stop.date", month, day, year, sep = "-")
 TO <- unite(TO, "date.time", stop.date, stop.time, sep = " ")
-FROM <- unite (FROM, "date.time", start.date, start.time, sep = " ")
+library(lubridate)
+class(TO$date.time)
+TO$date.time <- mdy_hms(TO$date.time)
+str(TO$date.time)
 
+library(tidyr)
+FROM <- unite(FROM, "start.date", month, day, year, sep = "-")
+FROM <- unite (FROM, "date.time", start.date, start.time, sep = " ")
 library(lubridate)
 FROM$date.time <- mdy_hms(FROM$date.time)
 str(FROM$date.time)
-
-library(lubridate)
-TO$date.time <- mdy_hms(TO$date.time)
-str(TO$date.time)
 
 #experimented with plotly visualizations
 library(plotly)
