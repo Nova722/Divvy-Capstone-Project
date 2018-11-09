@@ -1,0 +1,62 @@
+data = read.csv("C:/Users/chris/Desktop/Divvy/Divvy_Trips.csv", header = TRUE, sep = ",")
+
+#Created subsets in order to further explore trips to and from this station
+FROM <- subset(data, FROM.STATION.NAME == "Lake Shore Dr & Monroe St")
+TO <- subset(data, TO.STATION.NAME == "Lake Shore Dr & Monroe St")
+
+##FROM Data Prep
+#created a df with start.time only
+FROMts <- FROM[ -c(1, 3:22) ]
+
+#removed the time element, only date is relevant since this is a daily forecast
+library(tidyr)
+FROMts <- separate(FROMts, START.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
+FROMts <- FROMts[ -c(2:3) ]
+
+library(lubridate)
+FROMts$start.date <- mdy(FROMts$start.date)
+
+library(lubridate)
+FROMts$year <- year(FROMts$start.date)
+FROMts$month <- month(FROMts$start.date)
+FROMts$day <- day(FROMts$start.date)
+
+dailyFROM <- FROMts %>%
+  group_by(year, month, day)
+
+FROMper_day <- summarize(dailyFROM, daily_observations = n())
+FROMper_day <- unite(FROMper_day, "date", year,month,day, sep = "-")
+
+#Formatted to a time object
+FROMper_day$date <- strptime(FROMper_day$date, format='%Y-%m-%d')
+str(FROMper_day)
+sum(FROMper_day$daily_observations) #210255 observations, this matches with the original dataset
+
+##TO Data Prep
+
+#created a df with stop.time only
+TOts <- TO[ -c(1:2, 4:22) ]
+
+#removed the time element, only date is relevant since this is a daily forecast
+library(tidyr)
+TOts <- separate(TOts, STOP.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
+TOts <- TOts[ -c(2:3) ]
+
+library(lubridate)
+TOts$stop.date <- mdy(TOts$stop.date)
+
+library(lubridate)
+TOts$year <- year(TOts$stop.date)
+TOts$month <- month(TOts$stop.date)
+TOts$day <- day(TOts$stop.date)
+
+dailyTO <- TOts %>%
+  group_by(year, month, day)
+
+TOper_day <- summarize(dailyTO, daily_observations = n())
+TOper_day <- unite(TOper_day, "date", year,month,day, sep = "-")
+
+#Formatted to a time object
+TOper_day$date <- strptime(TOper_day$date, format='%Y-%m-%d')
+str(TOper_day)
+sum(TOper_day$daily_observations) #203014 observations, this matches with the original dataset
