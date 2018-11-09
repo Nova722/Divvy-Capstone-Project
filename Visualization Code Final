@@ -1,0 +1,242 @@
+data = read.csv("C:/Users/chris/Desktop/Divvy/Divvy_Trips.csv", header = TRUE, sep = ",")
+
+####Visualizations
+
+##Created my subset for visualizations on gender, age and trip duration
+GENDER = data.frame(data$GENDER, data$BIRTH.YEAR, data$TRIP.DURATION, data$STOP.TIME)
+names(GENDER)[1]="gender"
+names(GENDER)[2]="dob"
+names(GENDER)[3]="duration"
+names(GENDER)[5]="year"
+
+#added a column for age
+library(dplyr)
+GENDER_NEW = mutate(GENDER, age = 2018 - dob)
+GENDER_NEW_AGE = GENDER_NEW[!is.na(GENDER_NEW$age), ]
+sd(GENDER_NEW_AGE$age) #standard deviation of 10.8
+
+#separated month, day and year in order to prep the data for annual visualizations
+library(tidyr)
+GENDER = separate(GENDER, year, c("stop.date", "stop.time"), sep = " ")
+GENDER = separate(GENDER, stop.date, c("month", "day", "year"), sep = "/")
+
+##Visualized Gender Ratio
+library(dplyr)
+GENDER_TIME = GENDER %>% 
+  group_by(gender) %>% 
+  count(year) 
+#remove NAs and other outliers (below 18, older than 75)
+GENDER_TIME <- GENDER_TIME[-c(1:6, 17), ] 
+
+#ggplot visualization
+library(ggplot2)
+GENDER_TIME_GRAPH = ggplot(GENDER_TIME, aes(x = year, y = n, fill = gender)) +
+  geom_bar(position = "stack", stat="identity") +
+  ggtitle("Rides & Gender Over Time")+
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("Rides") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+GENDER_TIME_GRAPH + scale_fill_manual(values = c("Hot Pink", "Royal Blue"))
+
+##Visualized age over time
+#added a column for age
+library(dplyr)
+GENDER <- mutate(GENDER, age = 2018 - dob)
+summary(GENDER_NEW$age) #mean age of 38, median 35
+
+#prepared the data
+library(dplyr)
+AGE_TIME = GENDER %>% 
+  group_by(age, year) %>% 
+  count() 
+AGE_TIME <- AGE_TIME[-c(1:6, 292:391), ]
+
+#ggplot visualization
+library(ggplot2)
+ggplot(AGE_TIME, aes(x = factor(age), y = n, color = year, size = n)) +geom_point()+ 
+  ggtitle("Rides & Age Over Time")+
+  labs(x = "Age", y = "Rides", col = "Year") +
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("Rides") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+##City of Chicago Visualization
+censusdata = read.csv("C:/Users/chris/Desktop/Chicago_Age_Distribution.csv", header = TRUE, sep = ",")
+
+#Visualized Age distribution in Chicagoland
+sum(censusdata$Total)
+
+#Changed the categories to reflect overall percentage
+library(dplyr)
+censusdata <- mutate(censusdata, Percent = (Total / 1930544) * 100 )
+
+#ggplot visualization
+library(ggplot2)
+AGE <- ggplot(censusdata, aes(x = Age.Range, y = Percent)) +
+  geom_bar(stat="identity") +
+  ggtitle("Chicagoland Age Distribution")+
+  scale_y_continuous(limits = c(0, 30)) +
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("Percentage of People") +
+  xlab("Age Range") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+AGE + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+##Divvy Age distribution visualization
+divvyage = read.csv("C:/Users/chris/Documents/GitHub/Divvy-Capstone-Project/Age_Divvy.csv", header = TRUE, sep = ",")
+
+#Changed the categories to reflect overall percentage
+sum(divvyage$n)
+library(dplyr)
+divvyage <- mutate(divvyage, Percent = (n / 9997491) * 100 )
+
+library(ggplot2)
+AGE_Divvy <- ggplot(divvyage, aes(x = age, y = Percent)) +
+  geom_bar(stat="identity", fill = "Royal Blue") +
+  ggtitle("Divvy Age Distribution")+
+  scale_y_continuous(limits = c(0, 30)) +
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("Percentage of People") +
+  xlab("Age Range") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+AGE_Divvy + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+##Gender & Age Visualization
+#tidyd the data up as a .csv file
+divvyagegender = read.csv("C:/Users/chris/Documents/GitHub/Divvy-Capstone-Project/Age_GENDER_Divvy.csv", header = TRUE, sep = ",")
+
+library(ggplot2)
+GENDER_AGE_GRAPH <- ggplot(divvyagegender, aes(x = age, y = Percent, color = Gender)) +
+  geom_line(size = 2) +
+  ggtitle("Divvy Gender & Age")+
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("Percent of Rides") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+GENDER_AGE_GRAPH + scale_color_manual(values = c("Hot Pink", "Royal Blue"))
+
+##Trip Duration Vlibrary(dplyr)
+DURATION = data.frame(data$START.TIME, data$STOP.TIME)
+
+#Transformed column into time objects
+library(lubridate)
+DURATION$data.START.TIME = mdy_hms(DURATION$data.START.TIME)
+DURATION$data.STOP.TIME = mdy_hms(DURATION$data.STOP.TIME)
+
+#Converted seconds to minutes
+library(dplyr)
+DURATION = mutate(DURATION, trip.length = data.STOP.TIME - data.START.TIME)
+DURATION$trip.length <- DURATION$trip.length / 60
+
+#converted duration to minutes
+LENGTH_SUMMARY = DURATION %>% 
+  group_by(trip.length) %>% 
+  count() 
+
+#Removed outliers and data entry malfunctions
+LENGTH_SUMMARY <- LENGTH_SUMMARY[!(LENGTH_SUMMARY$trip.length > 55 |
+                                     LENGTH_SUMMARY$trip.length < 1 ), ]
+
+#Visualized trip duration
+library(ggplot2)
+ggplot(LENGTH_SUMMARY, aes(x = trip.length, y = n)) + geom_line() +
+  ggtitle("Trip Duration Frequency")+
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("Frequency") +
+  xlab("Trip Duration") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+##Took a random sample size in order to visualize and further analyze
+library(tidyr)
+set.seed(400)
+GENDER_SAMPLE = sample_n(GENDER_NEW, 1000, replace = FALSE, weight = NULL, .env = NULL)
+GENDER_SAMPLE = subset(GENDER_SAMPLE, select = -c(2,4)) 
+names(GENDER_SAMPLE)[1]<-"Gender"
+
+GENDER_SAMPLE$trip.length <- as.numeric(GENDER_SAMPLE$duration)
+
+#Removed outliers in trip length
+GENDER_SAMPLE <- GENDER_SAMPLE[!(as.numeric(GENDER_SAMPLE$duration > 99)), ]
+
+#Analyzed possible correlations with ggpairs
+library(GGally)
+ggpairs(GENDER_SAMPLE, aes(color = Gender))
+
+##TO and FROM Station visualization for the Lake Shore DR. & Monroe St. Station
+#Created subsets in order to further explore trips to and from this station
+FROM <- subset(data, FROM.STATION.NAME == "Lake Shore Dr & Monroe St")
+TO <- subset(data, TO.STATION.NAME == "Lake Shore Dr & Monroe St")
+
+#separated the date and time in start and stop time columns order to make the analysis easier 
+library(tidyr)
+FROM_sepstart <- separate(FROM, START.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
+FROM <- separate(FROM_sepstart, STOP.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
+View(FROM)
+
+library(tidyr)
+TO_sepstart <- separate(TO, START.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
+TO <- separate(TO_sepstart, STOP.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
+View(TO)
+
+#combined the AM/PM in the time
+library(tidyr)
+FROM <- unite(FROM, "start.time", start.time, start.time.ampm, sep = " ")
+TO <- unite(TO, "stop.time", stop.time, stop.time.ampm, sep = " ")
+
+#separated the dates into day, month, year 
+library(tidyr)
+FROM <- separate(FROM, start.date, c("month", "day", "year"), sep = "/")
+View(FROM)
+
+library(tidyr)
+TO <- separate(TO, stop.date, c("month", "day", "year"), sep = "/")
+View(TO)
+
+#Grouped observation numbers by year 
+library(dplyr)
+TO_YEARS = TO %>% 
+  group_by(year) %>% 
+  count(year) 
+
+library(dplyr)
+FROM_YEARS = FROM %>% 
+  group_by(year) %>% 
+  count(year) 
+
+#visualized the years in ggplot
+library(ggplot2)
+ggplot(FROM_YEARS, aes(factor(year))) + geom_bar(fill = "#0072B2")
+
+ggplot(TO_YEARS, aes(x = year, y = n, label = n)) +
+  geom_bar(stat = "identity", fill = "Royal Blue") +
+  geom_text(aes(label= n), size = 6, position=position_dodge(width=0.9), vjust=-0.25) +
+  ggtitle("Divvy Bikes Taken To the Station")+
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("number of rides") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+ggplot(FROM_YEARS, aes(x = year, y = n, label = n)) +
+  geom_bar(stat = "identity", fill = "Royal Blue") +
+  geom_text(aes(label= n), size = 6, position=position_dodge(width=0.9), vjust=-0.25) +
+  ggtitle("Divvy Bikes Taken From the Station")+
+  theme(plot.title = element_text(size = 20, face = "bold")) +
+  ylab("number of rides") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
