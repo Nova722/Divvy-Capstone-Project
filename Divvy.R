@@ -1,408 +1,311 @@
 data = read.csv("C:/Users/chris/Desktop/Divvy/Divvy_Trips.csv", header = TRUE, sep = ",")
-
-#Reviewed Basic Data Structure
-head(data)
-summary(data)
-str(data)
-
-#Tidy up the data for general visualizations on gender, age & trip duration
-
-GENDER <- data.frame(data$GENDER, data$BIRTH.YEAR, data$START.TIME, data$STOP.TIME)
-summary(GENDER$data.GENDER)
-
 library(tidyr)
-GENDER <- separate(GENDER, data.START.TIME, c("start.date", "start.time", "start.ampm"), sep = " ")
-GENDER <- separate(GENDER, data.STOP.TIME, c("stop.date", "stop.time", "stop.ampm"), sep = " ")
-
-library(tidyr)
-GENDER <- unite(GENDER, "start.time", start.time, start.ampm, sep = " ")
-GENDER <- unite(GENDER, "stop.time", stop.time, stop.ampm, sep = " ")
-
-#Tidyd the data
-library(dplyr)
-TIME_SERIES = GENDER %>% 
-  group_by(start.date) %>% 
-  count()
-
 library(lubridate)
-TIME_SERIES$start.date <- mdy(TIME_SERIES$start.date)
-
-names(TIME_SERIES)[1] <- "date"
-
-TIME_SERIES$DayN <- as.numeric(format(as.Date(TIME_SERIES$date),"%d"))
-TIME_SERIES$MonthN <- as.numeric(format(as.Date(TIME_SERIES$date),"%m"))
-TIME_SERIES$YearN <- as.numeric(format(as.Date(TIME_SERIES$date),"%Y"))
-
-write.csv(TIME_SERIES, "Monthly OVerview.csv")
-
-
-library(ggplot2)
-TIME_SERIES_GRAPH2<- ggplot(TIME_SERIES2, aes(x = MonthN, y = nn, group = YearN, colour=YearN)) + 
-  geom_line() +
-  geom_point() +
-  scale_x_discrete(breaks = data$MonthN, labels = data$MonthN)
-
-
-library(ggplot2)
-TIME_SERIES_GRAPH <- ggplot(TIME_SERIES, aes(x = date, y = n)) + 
-  geom_point() + scale_x_date(limits = "%m")
-
-library(ggplot2)
-TIME_SERIES_GRAPH <- ggplot(TIME_SERIES, aes(x = MonthN, y = n, group = YearN)) + 
-  geom_point()
-
-library(scales)
-TIME_SERIES_GRAPH + scale_x_date(breaks = date_breaks("months"),
-                                 labels = date_format("%b"))
-
-
-#converted AM/PM to military time in order to format properly for lubridate
-GENDER$start.time<- (format(strptime(GENDER$start.time, "%I:%M:%S %p"), "%H:%M:%S"))
-GENDER$stop.time<- (format(strptime(GENDER$stop.time, "%I:%M:%S %p"), "%H:%M:%S"))
-
-library(tidyr)
-GENDER <- unite(GENDER, "Start.Date", start.date, start.time, sep = " ")
-GENDER <- unite(GENDER, "Stop.Date", stop.date, stop.time, sep = " ")
-
-#converted start & stop to time objects
-library(lubridate)
-GENDER$Stop.Date <- mdy_hms(GENDER$Stop.Date)
-GENDER$Start.Date <- mdy_hms(GENDER$Start.Date)
-
-#subracted the stop and start time to get trip duration
 library(dplyr)
-GENDER_NEW <- mutate(GENDER, trip.length = Stop.Date - Start.Date)
-GENDER_NEW$trip.length <- GENDER_NEW$trip.length / 60
-
-summary(as.numeric(GENDER_NEW$trip.length))
-summary(GENDER_NEW)
-
-#Visualized trip duration
-library(ggplot2)
-ggplot(GENDER_NEW, aes(x = as.numeric(trip.length))) + geom_histogram()
-
-#added a column for age
-library(dplyr)
-GENDER_NEW <- mutate(GENDER_NEW, age = 2018 - data.BIRTH.YEAR)
-summary(GENDER_NEW$age)
-str(GENDER_NEW)
-
-GENDER_NEW_AGE <- GENDER_NEW[!is.na(GENDER_NEW$age), ]
-sd(GENDER_NEW_AGE$age)
-str(GENDER_NEW_AGE)
-
-library(dplyr)
-AGE_SUMMARY = GENDER_NEW_AGE %>% 
-  group_by(age) %>% 
-  count() 
-
-library(dplyr)
-AGE_GENDER_SUMMARY = GENDER_NEW_AGE %>% 
-  group_by(data.GENDER,age) %>% 
-  count() 
-
-#Exported AGE to re-work to compare it to the Chicago data
-write.csv(AGE_SUMMARY, "Age_Divvy.csv")
-write.csv(AGE_GENDER_SUMMARY, "Age_Gender_Divvy.csv")
-
-#tidyd up the data in order to visualize gender and number of rides
-library(tidyr)
-GENDER_ <- separate(GENDER_NEW, Stop.Date, c("stop.date", "stop.time"), sep = " ")
-GENDER_ <- separate(GENDER_, stop.date, c("year", "month", "day"), sep = "-")
-
-library(dplyr)
-GENDER_TIME = GENDER_ %>% 
-  group_by(data.GENDER) %>% 
-  count(year) 
-
-GENDER_TIME <- GENDER_TIME[-c(1:6, 17), ] 
-names(GENDER_TIME)[1]<-"Gender"
-names(GENDER_TIME)[3]<-"Rides"
-
-library(ggplot2)
-GENDER_TIME_GRAPH <- ggplot(GENDER_TIME, aes(x = year, y = Rides, fill = Gender)) +
-  geom_bar(position = "stack", stat="identity") +
-  ggtitle("Rides & Gender Over Time")+
-  theme(plot.title = element_text(size = 20, face = "bold")) +
-  ylab("Rides") +
-  theme(axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-GENDER_TIME_GRAPH + scale_fill_manual(values = c("Hot Pink", "Royal Blue"))
-
-#compared Age and Gender
-divvyagegender = read.csv("C:/Users/chris/Documents/GitHub/Divvy-Capstone-Project/Age_GENDER_Divvy.csv", header = TRUE, sep = ",")
-
-GENDER_AGE_GRAPH <- ggplot(divvyagegender, aes(x = age, y = n, fill = Gender)) +
-  geom_bar(position = "stack", stat="identity") +
-  ggtitle("Divvy Gender & Age")+
-  theme(plot.title = element_text(size = 20, face = "bold")) +
-  ylab("Rides") +
-  theme(axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-GENDER_AGE_GRAPH + scale_fill_manual(values = c("Hot Pink", "Royal Blue"))
-
-#Visualized and analyzed age over time
-
-library(dplyr)
-AGE_TIME = GENDER_ %>% 
-  group_by(age) %>% 
-  count(year) 
-
-AGE_TIME <- AGE_TIME[-c(1:6, 291:391), ] 
-names(AGE_TIME)[3]<-"Rides"
-
-
-library(ggplot2)
-ggplot(AGE_TIME, aes (x = factor(age), y = Rides, color = year, size = Rides)) +geom_point()+ 
-  ggtitle("Rides & Age Over Time")+
-  labs(x = "Age", y = "Rides", col = "Year") +
-  theme(plot.title = element_text(size = 20, face = "bold")) +
-  ylab("Rides") +
-  theme(axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-       
-#Took a random sample size in order to visualize and further analyze
-library(tidyr)
-GENDER_SAMPLE <- sample_n(GENDER_NEW, 1200, replace = FALSE, weight = NULL, .env = NULL)
-
-GENDER_SAMPLE <- subset(GENDER_SAMPLE, select = -c(2:4)) 
-
-#Analyzed possible correlations with ggpairs
-library(GGally)
-ggpairs(GENDER_SAMPLE)
-
-
-#Reviewed different stations forecasting options regarding trips from, originally wanted to choose Federal St & Polk St, decided against it, Lake Shore Dr. & Monroe has the highest number of observations
-FROM.STATION.NAMES <- data$FROM.STATION.NAME
-summary(FROM.STATION.NAMES)
-
-#Reviewed different stations forecasting options regarding trips to.  Lake Shore Dr. & Monroe St. has the 2nd most observations, therefore since observation number was high in both from and to I will forecast the tripts taken from and to this station
-TO.STATION.NAMES <- data$TO.STATION.NAME
-summary(TO.STATION.NAMES)
 
 #Created subsets in order to further explore trips to and from this station
 FROM <- subset(data, FROM.STATION.NAME == "Lake Shore Dr & Monroe St")
 TO <- subset(data, TO.STATION.NAME == "Lake Shore Dr & Monroe St")
 
-#There are a total of 210255 trips from the Lake Shore Dr. & Monroe St. station.  first trip recorded on 6/28/2013, last trip recorded 12/28/2017
-summary(FROM)
-head(FROM)
-tail(FROM)
+##FROM Data Prep
+#created a df with start.time only
+FROMts <- FROM[ -c(1, 3:22) ]
 
-#There are a total of 203014 trips to the Lake Shore Dr. & Monroe St. station.  first trip recorded on 6/28/2013, last trip recorded 12/31/2017
-summary(TO)
-head(TO)
-tail(TO)
+#removed the time element, only date is relevant since this is a daily forecast
+FROMts <- separate(FROMts, START.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
+FROMts <- FROMts[ -c(2:3) ]
 
-#separated the date and time in start and stop time columns order to make the analysis easier 
-library(tidyr)
-FROM_sepstart <- separate(FROM, START.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
-FROM <- separate(FROM_sepstart, STOP.TIME, c("start.date", "start.time", "start.time.ampm"), sep = " ")
-View(FROM)
+FROMts$start.date <- mdy(FROMts$start.date)
+str(FROMts)
+FROMtstest <- FROMts
 
-library(tidyr)
-TO_sepstart <- separate(TO, START.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
-TO <- separate(TO_sepstart, STOP.TIME, c("stop.date", "stop.time", "stop.time.ampm"), sep = " ")
-View(TO)
+FROMts$year <- year(FROMts$start.date)
+FROMts$month <- month(FROMts$start.date)
+FROMts$day <- day(FROMts$start.date)
 
-#combined the AM/PM in the time
-library(tidyr)
-FROM <- unite(FROM, "start.time", start.time, start.time.ampm, sep = " ")
-TO <- unite(TO, "stop.time", stop.time, stop.time.ampm, sep = " ")
+#created the date and count of daily observations table
+dailyFROM <- FROMts %>%
+  group_by(year, month, day)
 
-#converted AM/PM to military time for easy analysis
-TO$stop.time<- (format(strptime(TO$stop.time, "%I:%M:%S %p"), "%H:%M:%S"))
-FROM$start.time <- (format(strptime(FROM$start.time, "%I:%M:%S %p"), "%H:%M:%S"))
+FROMper_day <- summarize(dailyFROM, daily_observations = n())
+FROMper_day <- unite(FROMper_day, "date", year,month,day, sep = "-")
 
-#separated the dates into day, month, year 
-library(tidyr)
-FROM <- separate(FROM, start.date, c("month", "day", "year"), sep = "/")
-View(FROM)
+#exported to excel to remove leap years and add missing days with the average from the previous day
+write.csv(FROMper_day, "FROM_Divvy.csv")
+#imported the clean data
+FROMper_day = read.csv("C:/Users/chris/Documents/GitHub/Divvy-Capstone-Project/FROM_Divvy.csv", header = TRUE, sep = ",")
+#1644 observation lines on the clean data
 
-library(tidyr)
-TO <- separate(TO, stop.date, c("month", "day", "year"), sep = "/")
-View(TO)
+#Formatted to a time object
+FROMper_day$date <- mdy(FROMper_day$date)
+str(FROMper_day)
+head(FROMper_day)
 
-#converted dates to numeric for easier analysis
-FROM$month <- as.numeric(unlist(FROM$month))
-class(FROM$month)
-FROM$day <- as.numeric(unlist(FROM$day))
-class(FROM$day)
-FROM$year <- as.numeric(unlist(FROM$year))
-class(FROM$year)
+train.FROM = FROMper_day[1:1524,]
+test.FROM = FROMper_day[1525:1644,] #forecast 3 months out
 
-TO$month <- as.numeric(unlist(TO$month))
-class(TO$month)
-TO$day <- as.numeric(unlist(TO$day))
-class(TO$day)
-TO$year <- as.numeric(unlist(TO$year))
-class(TO$year)
+library(forecast)
+library(TSA)
 
-#searched for any NA values in TO & FROM
-library(dplyr)
-summary(is.na(TO$year))
-summary(is.na(TO$month))
-summary(is.na(TO$day))
+#Checked for seasonality
+date_ts <- ts(train.FROM$daily_observations,frequency = 1)
+p <- periodogram(date_ts)
+m <- p$freq[which.max(p$spec)]
+#Find the seasonality in the data
+seasonality <- 1/m
+seasonality #seasonality of 384
+1/p$freq[order(p$spec)]
 
-summary(is.na(FROM$year))
-summary(is.na(FROM$month))
-summary(is.na(FROM$day))
+#created the ts formatted to recognize the time
+inds <- seq(as.Date("2013-06-27"), as.Date("2017-8-30"), by = "day")
 
-#Grouped observation numbers by year 
-library(dplyr)
-TO_YEARS = TO %>% 
-  group_by(year) %>% 
-  count(year) 
+train1 <- ts(train.FROM$daily_observations,start = c(2013, as.numeric(format(inds[1], "%j"))),frequency = 384)
+plot(train1,xlab='Year',ylab="Trip count")
+acf(train1)
+pacf(train1)
 
-library(dplyr)
-FROM_YEARS = FROM %>% 
-  group_by(year) %>% 
-  count(year) 
+test <- ts(test.FROM$daily_observations,start = c(2017, as.numeric(format(inds[1], "%j"))),frequency = 384)
+plot(test,xlab='Year',ylab="Trip count")
 
-#visualized the years in ggplot
-library(ggplot2)
-ggplot(FROM_YEARS, aes(factor(year))) + geom_bar(fill = "#0072B2")
+###BASELINE MODEL
+#created the arima 1,1,1 model as a baseline
+FROMmodel.base = Arima(train1, order = c(1,1,1))
+summary(FROMmodel.base) 
+#Forecasted baseline model
+FROMmodel.basefor = forecast(FROMmodel.base, 120)
+plot(FROMmodel.basefor) 
+#checked the accuracy of the baseline model
+model.base.acc = accuracy(FROMmodel.basefor, test.FROM$daily_observations)
+model.base.acc
+#Seasonality not accounted for
 
-ggplot(TO_YEARS, aes(x = year, y = n, label = n)) +
-  geom_bar(stat = "identity", fill = "Royal Blue") +
-  geom_text(aes(label= n), size = 6, position=position_dodge(width=0.9), vjust=-0.25) +
-  ggtitle("Divvy Bikes Taken To the Station")+
-  theme(plot.title = element_text(size = 20, face = "bold")) +
-  ylab("number of rides") +
-  theme(axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-ggplot(FROM_YEARS, aes(x = year, y = n, label = n)) +
-  geom_bar(stat = "identity", fill = "Royal Blue") +
-  geom_text(aes(label= n), size = 6, position=position_dodge(width=0.9), vjust=-0.25) +
-  ggtitle("Divvy Bikes Taken From the Station")+
-  theme(plot.title = element_text(size = 20, face = "bold")) +
-  ylab("number of rides") +
-  theme(axis.text=element_text(size=12),
-         axis.title=element_text(size=14,face="bold")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-  
-
-#Grouped observation numbers by year, month, day in TO
-library(dplyr)
-TO_Obs <- 
-  TO %>% 
-  count(year, month, day)
-View(TO_Obs)
+###found the ideal "simple" pdq values
+###model to try out different parameters for the best AIC comparing it to the baseline of 18021.96
+pvar<-0:5
+dvar<-0:3
+qvar<-0:7
 
 
-#Grouped & Visulaized observation numbers by year, month, day in FROM
-library(dplyr)
-FROM_Obs <- 
-  FROM %>% 
-  count(year, month, day)
-View(FROM_Obs)
+OrderGrid<-expand.grid(pvar,dvar,qvar)
 
-library(ggplot2)
-ggplot(FROM_Obs, aes( x= factor(month), y = n, fill = year)) + geom_point(col ="#0072B2")+ 
-  facet_grid(.~ year) + labs( x = "month", y = "number of observations") +
-  ggtitle("Divvy Bikes Taken From the Station")+
-  theme(plot.title = element_text(size = 20, face = "bold")) +
-  ylab("number of rides") +
-  theme(axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  scale_x_discrete(breaks=seq(1, 12, 2))
+ModFit <- function(x, dat){
+  m = Arima(dat, order=c(x[[1]], x[[2]], x[[3]]))
+  return(m)
+} 
 
+Fits <- plyr::alply(OrderGrid, 1, ModFit, dat = train1)
+Fits #models with the highest AIC included (5,2,7), (4,2,7),(5,1,7) 
+Fits[1:26] #no lower aic values found in 1:26
 
-#Exported TO_Obs & FROM_obs in excel for easy viewing
-write.csv(FROM_Obs, "FROM_Observations.csv")
-write.csv(TO_Obs, "TO_Observations.csv")
+###Using the ideal models found in my Fits table to see if they outperform the basline
 
+#Model 1
+FROMmodel.1 = Arima(train1, order = c(5,2,7))
+summary(FROMmodel.1) 
+#Forecasted baseline model
+FROMmodel.1for = forecast(FROMmodel.1, 120)
+plot(FROMmodel.1for)  
+#checked the accurac of the baseline model
+model.base.acc1 = accuracy(FROMmodel.1for, test.FROM$daily_observations)
+model.base.acc1
 
-#united the dates as year, month, day for easy visualization
-library(tidyr)
-FROM_Obs <- unite(FROM_Obs, "Date", year, month, day, sep = "")
-View(FROM_Obs)
+#Model 2
+FROMmodel.2 = Arima(train1, order = c(4,2,7))
+summary(FROMmodel.2) 
+#Forecasted baseline model
+FROMmodel.2for = forecast(FROMmodel.2, 120)
+plot(FROMmodel.2for) #This model is not a decent use case as the forecast swings to the negative
+#checked the accuracy of the baseline model
+model.base.acc2 = accuracy(FROMmodel.2for, test.FROM$daily_observations)
+model.base.acc2
 
-library(ggplot2)
-ggplot(FROM_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations")
+#Model 3
+FROMmodel.3 = Arima(train1, order = c(5,1,7))
+summary(FROMmodel.3) 
+#Forecasted baseline model
+FROMmodel.3for = forecast(FROMmodel.3, 120)
+plot(FROMmodel.3for) #This model is not a decent use case as the forecast swings to the negative
+#checked the accuracy of the baseline model
+model.base.acc3 = accuracy(FROMmodel.3for, test.FROM$daily_observations)
+model.base.acc3
 
-#visualized observations on a day level
+###auto.arima model
+FROMmodel1aa = auto.arima(train1)
+summary(FROMmodel1aa)
+FROMmodel1aafor = forecast(FROMmodel1aa, 120)
+plot(FROMmodel1aafor)
+#checked the accuracy of the baseline model
+model.base.acc1aa = accuracy(FROMmodel1aafor, test.FROM$daily_observations)
+model.base.acc1aa 
 
-library(tidyr)
-TO_Obs <- unite(TO_Obs, "Date", year, month, day, sep = "")
-View(TO_Obs)
+###MODELS WITH SEASONALITY
+#Model 1s
+model1s = Arima(train1, order = c(5,2,7), seasonal = list(order = c(0,1,0), period = 384))
+summary(model1s)
+FROMmodel1sfor = forecast(model1s, 120)
+plot(FROMmodel1sfor)
+#checked the accuracy of the baseline model
+model.base.acc1s = accuracy(FROMmodel1sfor, test.FROM$daily_observations)
+model.base.acc1s 
 
-library(ggplot2)
-ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations") +
-  ggtitle("TO") + theme(plot.title = element_text(hjust = 0.5))
+#Model 2s
+model2s = Arima(train1, order = c(4,2,7), seasonal = list(order = c(0,1,0), period = 384))
+summary(model2s)
+FROMmodel2sfor = forecast(model2s, 120)
+plot(FROMmodel2sfor)
+#checked the accuracy of the baseline model
+model.base.acc2s = accuracy(FROMmodel1sfor, test.FROM$daily_observations)
+model.base.acc2s 
 
-#combined the date/time and used lubridate to properly classify them
-library(tidyr)
-TO <- unite(TO, "stop.date", month, day, year, sep = "-")
-TO <- unite(TO, "date.time", stop.date, stop.time, sep = " ")
-library(lubridate)
-class(TO$date.time)
-TO$date.time <- mdy_hms(TO$date.time)
-str(TO$date.time)
+#Model 3s
+model3s = Arima(train1, order = c(5,1,7), seasonal = list(order = c(0,1,0), period = 384))
+summary(model3s)
+FROMmodel3sfor = forecast(model3s, 120)
+plot(FROMmodel3sfor)
+#checked the accuracy of the baseline model
+model.base.acc3s = accuracy(FROMmodel3sfor, test.FROM$daily_observations)
+model.base.acc3s 
 
-library(tidyr)
-FROM <- unite(FROM, "start.date", month, day, year, sep = "-")
-FROM <- unite (FROM, "date.time", start.date, start.time, sep = " ")
-library(lubridate)
-FROM$date.time <- mdy_hms(FROM$date.time)
-str(FROM$date.time)
+#Model 4s
+model4s = Arima(train1, order = c(2,1,7), seasonal = list(order = c(0,1,0), period = 384))
+summary(model4s)
+FROMmodel4sfor = forecast(model4s, 120)
+plot(FROMmodel4sfor)
+#checked the accuracy of the baseline model
+model.base.acc4s = accuracy(FROMmodel4sfor, test.FROM$daily_observations)
+model.base.acc4s 
 
-library(dplyr)
-df <- FROM %>%
-  group_by(date.time) %>%
-  summarise(DateObservations = length(date.time)) %>%
-              summarise(DatePct = date.time/nrow(FROM))
+#Model 5s
+model5s = Arima(train1, order = c(3,1,3), seasonal = list(order = c(0,1,0), period = 384))
+summary(model5s)
+FROMmodel5sfor = forecast(model5s, 120)
+plot(FROMmodel5sfor)
+#checked the accuracy of the baseline model
+model.base.acc5s = accuracy(FROMmodel5sfor, test.FROM$daily_observations)
+model.base.acc5s 
 
-library(ggplot2)
-ggplot(FROM, aes(x = date.time, y = count)) +geom_line()
+#Model 6s
+model6s = Arima(train1, order = c(3,1,7), seasonal = list(order = c(0,1,0), period = 384))
+summary(model6s)
+FROMmodel6sfor = forecast(model6s, 120)
+plot(FROMmodel6sfor)
+#checked the accuracy of the baseline model
+model.base.acc6s = accuracy(FROMmodel6sfor, test.FROM$daily_observations)
+model.base.acc6s  
 
-#experimented with plotly visualizations
-library(plotly)
-p <- plot_ly(
-  x = TO_YEARS$year,
-  y = TO_YEARS$n,
-  name = "TO",
-  type = "bar")
+#Model 7s
+model7s = Arima(train1, order = c(5,1,8), seasonal = list(order = c(0,1,0), period = 384))
+summary(model7s)
+FROMmodel7sfor = forecast(model7s, 120)
+plot(FROMmodel7sfor)
+#checked the accuracy of the baseline model
+model.base.acc7s = accuracy(FROMmodel7sfor, test.FROM$daily_observations)
+model.base.acc7s  
 
-api_create(p, filename = "TO Years")
+#Model 8s
+model8s = Arima(train1, order = c(5,1,7), seasonal = list(order = c(0,1,0), period = 7))
+summary(model8s)
+FROMmodel8sfor = forecast(model8s, 120)
+plot(FROMmodel8sfor)
+#checked the accuracy of the baseline model
+model.base.acc8s = accuracy(FROMmodel8sfor, test.FROM$daily_observations)
+model.base.acc8s  
 
-library(plotly)
-p2 <- plot_ly(
-  x = FROM_YEARS$year,
-  y = FROM_YEARS$n,
-  name = "FROM",
-  type = "bar")
+#Model 9s
+model9s = Arima(train1, order = c(5,3,7), seasonal = list(order = c(0,1,0), period = 384))
+summary(model9s)
+FROMmodel9sfor = forecast(model9s, 120)
+plot(FROMmodel9sfor)
+#checked the accuracy of the baseline model
+model.base.acc9s = accuracy(FROMmodel9sfor, test.FROM$daily_observations)
+model.base.acc9s  
 
-api_create(p2, filename = "FROM Years")
+#Model 10s
+model10s = Arima(train1, order = c(2,1,2), seasonal = list(order = c(0,1,0), period = 384))
+summary(model10s)
+FROMmodel10sfor = forecast(model10s, 120)
+plot(FROMmodel10sfor)
+#checked the accuracy of the baseline model
+model.base.acc10s = accuracy(FROMmodel10sfor, test.FROM$daily_observations)
+model.base.acc10s  
 
-=======
-ggplot(TO_Obs, aes( x= Date, y = n )) + geom_point(position = "jitter") + labs( x = "time", y = "number_of_observations")
->>>>>>> parent of 380bb90... Updated visualizations & date/time using lubridate
+#Model 11s
+model11s = Arima(train1, order = c(2,2,2), seasonal = list(order = c(0,1,0), period = 384))
+summary(model11s)
+FROMmodel11sfor = forecast(model11s, 120)
+plot(FROMmodel11sfor)
+#checked the accuracy of the baseline model
+model.base.acc11s = accuracy(FROMmodel11sfor, test.FROM$daily_observations)
+model.base.acc11s
 
-_______________________________________________________
+#Model 12s
+model12s = Arima(train1, order = c(3,2,3), seasonal = list(order = c(0,1,0), period = 384))
+summary(model12s)
+FROMmodel12sfor = forecast(model12s, 120)
+plot(FROMmodel12sfor)
+#checked the accuracy of the baseline model
+model.base.acc12s = accuracy(FROMmodel12sfor, test.FROM$daily_observations)
+model.base.acc12s
 
-#converted characters to dates
-TO$stop.date <- as.Date(TO$stop.date, format = "%m/%d/%Y", tryFormats = c("%Y-%m-%d", "%Y/%m/%d"))
-class(TO$stop.date)
-FROM$start.date <- as.Date(FROM$start.date, format = "%m/%d/%Y", tryFormats = c("%Y-%m-%d", "%Y/%m/%d"))
-class(FROM$start.date)
+#Model 13s
+model13s = Arima(train1, order = c(3,0,3), seasonal = list(order = c(0,1,0), period = 384))
+summary(model13s)
+FROMmodel13sfor = forecast(model13s, 120)
+plot(FROMmodel13sfor)
+#checked the accuracy of the baseline model
+model.base.acc13s = accuracy(FROMmodel13sfor, test.FROM$daily_observations)
+model.base.acc13s
 
-#grouped
+#Model 14s
+model14s = Arima(train1, order = c(5,2,8), seasonal = list(order = c(0,1,0), period = 384))
+summary(model14s)
+FROMmodel14sfor = forecast(model14s, 120)
+plot(FROMmodel14sfor)
+#checked the accuracy of the baseline model
+model.base.acc14s = accuracy(FROMmodel14sfor, test.FROM$daily_observations)
+model.base.acc14s
 
+#Model 15s
+model15s = Arima(train1, order = c(3,1,5), seasonal = list(order = c(0,1,0), period = 384))
+summary(model15s)
+FROMmodel15sfor = forecast(model15s, 120)
+plot(FROMmodel15sfor)
+#checked the accuracy of the baseline model
+model.base.acc15s = accuracy(FROMmodel15sfor, test.FROM$daily_observations)
+model.base.acc15s
 
+#Model 16s
+model16s = Arima(train1, order = c(5,0,5), seasonal = list(order = c(0,1,0), period = 384))
+summary(model16s)
+FROMmodel16sfor = forecast(model16s, 120)
+plot(FROMmodel16sfor)
+#checked the accuracy of the baseline model
+model.base.acc16s = accuracy(FROMmodel16sfor, test.FROM$daily_observations)
+model.base.acc16s
 
+#Model 17s
+model17s = Arima(train1, order = c(3,3,3), seasonal = list(order = c(0,1,0), period = 384))
+summary(model17s)
+FROMmodel17sfor = forecast(model17s, 120)
+plot(FROMmodel17sfor)
+#checked the accuracy of the baseline model
+model.base.acc17s = accuracy(FROMmodel17sfor, test.FROM$daily_observations)
+model.base.acc17s
 
-Sys.setenv("plotly_username"="tcarr1989")
-Sys.setenv("plotly_api_key"="2I9jpljKFZun4xTzGYj3")
+#Model 18s
+model18s = Arima(train1, order = c(2,1,5), seasonal = list(order = c(0,1,0), period = 384))
+summary(model18s)
+FROMmodel18sfor = forecast(model18s, 120)
+plot(FROMmodel18sfor)
+#checked the accuracy of the baseline model
+model.base.acc18s = accuracy(FROMmodel18sfor, test.FROM$daily_observations)
+model.base.acc18s
 
-
-
+#Model 19s
+model19s = Arima(train1, order = c(3,2,1), seasonal = list(order = c(0,1,0), period = 384))
+summary(model19s)
+FROMmodel19sfor = forecast(model19s, 120)
+plot(FROMmodel19sfor)
+#checked the accuracy of the baseline model
+model.base.acc19s = accuracy(FROMmodel19sfor, test.FROM$daily_observations)
+model.base.acc19s
